@@ -11,44 +11,42 @@ class DenoiserTransBlock(nn.Module):
     def __init__(
         self,
         patch_size: int,
-        img_size: int,
+        x_points: int, # changed "img_size" to "x_points" - the number of points in C(\omega)
         embed_dim: int,
         dropout: float,
         n_layers: int,
         mlp_multiplier: int = 4,
-        n_channels: int = 4,
     ):
         super().__init__()
 
         self.patch_size = patch_size
-        self.img_size = img_size
-        self.n_channels = n_channels
+        self.x_points = x_points
+        self.n_channels = 1 # We have only "one channel"
         self.embed_dim = embed_dim
         self.dropout = dropout
         self.n_layers = n_layers
         self.mlp_multiplier = mlp_multiplier
 
-        seq_len = int((self.img_size / self.patch_size) * (self.img_size / self.patch_size))
-        patch_dim = self.n_channels * self.patch_size * self.patch_size
+        seq_len = int((self.x_points / self.patch_size) ) # * (self.x_points / self.patch_size))
+        patch_dim = self.n_channels * self.patch_size # * self.patch_size # I removed it because now patch_dim=patch_size
 
         self.patchify_and_embed = nn.Sequential(
-            nn.Conv2d(
-                self.n_channels,
-                patch_dim,
+            nn.Conv1d(
+                in_channels=self.n_channels, # We have one channel
+                out_channels=patch_dim,      # out channels are equal to the patch_dim
                 kernel_size=self.patch_size,
                 stride=self.patch_size,
             ),
-            Rearrange("bs d h w -> bs (h w) d"),
+            Rearrange("bs d l -> bs l d"), # h*w=l
             nn.LayerNorm(patch_dim),
             nn.Linear(patch_dim, self.embed_dim),
             nn.LayerNorm(self.embed_dim),
         )
 
         self.rearrange2 = Rearrange(
-            "b (h w) (c p1 p2) -> b c (h p1) (w p2)",
-            h=int(self.img_size / self.patch_size),
-            p1=self.patch_size,
-            p2=self.patch_size,
+            "b l (c p) -> b c (l p)", # I removed p1 and p2 and combined it to a single p
+            l=int(self.x_points / self.patch_size),
+            p=self.patch_size,
         )
 
         self.pos_embed = nn.Embedding(seq_len, self.embed_dim)
@@ -85,22 +83,21 @@ class DenoiserTransBlock(nn.Module):
 class Denoiser(nn.Module):
     def __init__(
         self,
-        image_size: int,
+        x_points: int, # changed "img_size" to "x_points" - the number of points in C(\omega)
         noise_embed_dims: int,
         patch_size: int,
         embed_dim: int,
         dropout: float,
         n_layers: int,
-        text_emb_size: int = 768,
+        y_points: int = 99, # changed "text_emb_size" to "y_points" - the number of points in G(\tau)
         mlp_multiplier: int = 4,
-        n_channels: int = 4
     ):
         super().__init__()
 
-        self.image_size = image_size
+        self.x_points = x_points
         self.noise_embed_dims = noise_embed_dims
         self.embed_dim = embed_dim
-        self.n_channels = n_channels
+        self.n_channels = 1 # We have one channel
 
         self.fourier_feats = nn.Sequential(
             SinusoidalEmbedding(embedding_dims=noise_embed_dims),
@@ -109,9 +106,9 @@ class Denoiser(nn.Module):
             nn.Linear(self.embed_dim, self.embed_dim),
         )
 
-        self.denoiser_trans_block = DenoiserTransBlock(patch_size, image_size, embed_dim, dropout, n_layers, mlp_multiplier, n_channels)
+        self.denoiser_trans_block = DenoiserTransBlock(patch_size, x_points, embed_dim, dropout, n_layers, mlp_multiplier)
         self.norm = nn.LayerNorm(self.embed_dim)
-        self.label_proj = nn.Linear(text_emb_size, self.embed_dim)
+        self.label_proj = nn.Linear(y_points, self.embed_dim)
 
     def forward(self, x, noise_level, label):
         noise_level = self.fourier_feats(noise_level).unsqueeze(1)
