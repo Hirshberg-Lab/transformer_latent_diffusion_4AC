@@ -92,8 +92,8 @@ class MLPSepConv(nn.Module):
         super().__init__()
         self.mlp = nn.Sequential(
             # this Conv with kernel size 1 is equivalent to the Linear layer in a "regular" transformer MLP
-            nn.Conv2d(embed_dim, mlp_multiplier * embed_dim, kernel_size=1, padding="same"),
-            nn.Conv2d(
+            nn.Conv1d(embed_dim, mlp_multiplier * embed_dim, kernel_size=1, padding="same"),
+            nn.Conv1d(
                 mlp_multiplier * embed_dim,
                 mlp_multiplier * embed_dim,
                 kernel_size=3,
@@ -101,15 +101,17 @@ class MLPSepConv(nn.Module):
                 groups=mlp_multiplier * embed_dim,
             ),  # <- depthwise conv
             nn.GELU(),
-            nn.Conv2d(mlp_multiplier * embed_dim, embed_dim, kernel_size=1, padding="same"),
+            nn.Conv1d(mlp_multiplier * embed_dim, embed_dim, kernel_size=1, padding="same"),
             nn.Dropout(dropout_level),
         )
 
     def forward(self, x):
-        w = h = int(np.sqrt(x.size(1)))  # only square images for now
-        x = rearrange(x, "bs (h w) d -> bs d h w", h=h, w=w)
+        # w = h = int(np.sqrt(x.size(1)))  # only square images for now
+        # x = rearrange(x, "bs (h w) d -> bs d h w", h=h, w=w)
+        x = rearrange(x, "bs l d -> bs d l") # instead of the two lines above
         x = self.mlp(x)
-        x = rearrange(x, "bs d h w -> bs (h w) d")
+        # x = rearrange(x, "bs d h w -> bs (h w) d")
+        x = rearrange(x, "bs d l -> bs l d") # instead of the above line
         return x
 
 
