@@ -113,7 +113,7 @@ class Denoiser(nn.Module):
     def forward(self, x, noise_level, label):
         noise_level = self.fourier_feats(noise_level).unsqueeze(1)
 
-        label = self.label_proj(label).unsqueeze(1)
+        label = self.label_proj(label) # .unsqueeze(1) # I removed this extra dim
 
         noise_label_emb = torch.cat([noise_level, label], dim=1)  # bs, 2, d
         noise_label_emb = self.norm(noise_label_emb)
