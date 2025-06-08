@@ -1,33 +1,39 @@
 from dataclasses import dataclass, field
 import torch
 
+# @dataclass
+# class DataDownloadConfig:
+#     """config for downloading and processing latents"""
+#     data_link: str
+#     caption_col: str = "caption"
+#     url_col: str = "url"
+#     latent_save_path: str = "latents_folder"
+#     raw_imgs_save_path: str = "raw_imgs_folder"
+#     use_drive: bool = False
+#     initial_csv_path: str = "imgs.csv"
+#     number_sample_per_shard: int = 10000
+#     image_size: int = 256
+#     batch_size: int = 64
+#     download_data: bool = True
+#     first_n_rows: int = 1000000
+#     use_wandb: bool = False
+
 @dataclass
-class DataDownloadConfig:
-    """config for downloading and processing latents"""
-    data_link: str
-    caption_col: str = "caption"
-    url_col: str = "url"
-    latent_save_path: str = "latents_folder"
-    raw_imgs_save_path: str = "raw_imgs_folder"
-    use_drive: bool = False
-    initial_csv_path: str = "imgs.csv"
-    number_sample_per_shard: int = 10000
-    image_size: int = 256
-    batch_size: int = 64
-    download_data: bool = True
-    first_n_rows: int = 1000000
-    use_wandb: bool = False
+class SpectralDataConfig:
+    omega_domain: tuple[float,float] = (0, 80.0)
+    num_bumps_range: tuple[int,int] = (1,2) 
+    bump_widths_fraction_range: tuple[float,float] = (0.13, 0.45)
+    bump_centers_fraction_range: tuple[float,float] = (0.0, 0.6)
 
 @dataclass
 class DenoiserConfig:
-    image_size: int = 16
+    x_points: int = 1024
     noise_embed_dims: int = 256
     patch_size: int = 2
     embed_dim: int = 128
     dropout: float = 0
     n_layers: int = 3
-    text_emb_size: int = 768
-    n_channels: int = 4 
+    y_points: int = 99 
     mlp_multiplier: int = 4 
 
 @dataclass
@@ -56,7 +62,8 @@ class DataConfig:
 
 @dataclass
 class TrainConfig:
-    batch_size: int = 128 
+    batch_size: int = 200
+    dataset_size: int = 20000 
     lr: float = 3e-4
     n_epoch: int = 100
     alpha: float = 0.999
@@ -68,8 +75,8 @@ class TrainConfig:
     run_id: str = ""
     model_name: str = ""
     compile: bool = True
-    save_model: bool = True
-    use_wandb: bool = True
+    save_model: bool = False
+    use_wandb: bool = False
 
 
 @dataclass
@@ -77,19 +84,19 @@ class LTDConfig:
     """main config for inference"""
     denoiser_cfg: DenoiserConfig = field(default_factory=DenoiserConfig)
     denoiser_load: DenoiserLoad = field(default_factory=DenoiserLoad)
-    vae_cfg: VaeConfig = field(default_factory=VaeConfig)
-    clip_cfg: ClipConfig = field(default_factory=ClipConfig)
+    # vae_cfg: VaeConfig = field(default_factory=VaeConfig)
+    # clip_cfg: ClipConfig = field(default_factory=ClipConfig)
 
 
 @dataclass
 class ModelConfig:
     """main config for getting data, training and inference"""
-    data_config: DataConfig 
-    download_config: DataDownloadConfig | None = None
+    # data_config: DataConfig 
+    data_config: SpectralDataConfig = field(default_factory=SpectralDataConfig)
     denoiser_config: DenoiserConfig = field(default_factory=DenoiserConfig)
     train_config: TrainConfig = field(default_factory=TrainConfig)
-    vae_cfg: VaeConfig = field(default_factory=VaeConfig)
-    clip_cfg: ClipConfig = field(default_factory=ClipConfig)
+    # vae_cfg: VaeConfig = field(default_factory=VaeConfig)
+    # clip_cfg: ClipConfig = field(default_factory=ClipConfig)
 
 
 if __name__=='__main__':
