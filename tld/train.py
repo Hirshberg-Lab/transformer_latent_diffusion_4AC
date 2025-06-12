@@ -93,7 +93,7 @@ def main(config: ModelConfig) -> Denoiser:
     if not train_config.from_scratch:
         accelerator.print("Loading Model:")
         wandb.restore(
-            train_config.model_name, run_path=f"apapiu/DIT_AC/runs/{train_config.run_id}", replace=True
+            train_config.model_name, run_path=f"sagimeir-tel-aviv-university/DIT_AC/runs/{train_config.run_id}", replace=True
         )
         full_state_dict = torch.load(train_config.model_name)
         model.load_state_dict(full_state_dict["model_ema"])
