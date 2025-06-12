@@ -12,14 +12,16 @@ class Laplace:
             + np.exp( self.omega * ( self.tau[:,None] -1 ) ) 
         self.eps = 1e-30 # for numerical stability
     def _create_spectrum(self) -> None:
-        spectrum = self.bumps.random_spectrum()[0]
-        integrand = spectrum * ( 1 - np.exp(-self.omega) + self.eps ) / ( self.omega + self.eps )
-        A = np.trapz(y=integrand,x=self.omega)
-        self.spectrum = spectrum/A
+        self.spectrum = self.bumps.random_spectrum()[0]
+        # integrand = spectrum * ( 1 - np.exp(-self.omega) + self.eps ) / ( self.omega + self.eps )
+        # A = np.trapz(y=integrand,x=self.omega)
+        # self.spectrum = spectrum/A
     def evaluate_transformation(self) -> np.ndarray:
         self._create_spectrum()
         integrand = self.kernel * self.spectrum /2./np.pi
-        return np.trapz(y=integrand,x=self.omega)
+        G = np.trapz(y=integrand,x=self.omega)
+        self.spectrum /= G[0]
+        return 2*G/G[0]-1
 
 
 class LaplaceTest:
