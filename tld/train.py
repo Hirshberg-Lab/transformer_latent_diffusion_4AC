@@ -65,7 +65,7 @@ def update_ema(ema_model: nn.Module, model: nn.Module, alpha: float = 0.999):
 
 
 
-def main(config: ModelConfig) -> Denoiser:
+def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
     """main train loop to be used with accelerate"""
     denoiser_config = config.denoiser_config
     train_config = config.train_config
@@ -78,7 +78,7 @@ def main(config: ModelConfig) -> Denoiser:
     hparams = asdict(dataconfig)
     random_seed = 40
     bumps = Bumps(hparams=hparams, random_seed=random_seed)
-    dataset = OnTheFlyDataset(bumps=bumps, dataset_size=train_config.dataset_size)
+    dataset = OnTheFlyDataset(bumps=bumps, dataset_size=train_config.dataset_size, use_stft=use_stft)
     train_loader = DataLoader(dataset, batch_size=train_config.batch_size, shuffle=False,num_workers=0)
 
     model = Denoiser(**asdict(denoiser_config))
@@ -121,7 +121,7 @@ def main(config: ModelConfig) -> Denoiser:
         # accelerator.print(f"epoch: {i}")
         batch_loss=[]
         for x, y in tqdm(train_loader):
-            x = x.view(-1,1,denoiser_config.x_points)  
+            # x = x.view(-1,1,denoiser_config.x_points)  
 
             noise_level = torch.tensor(
                 np.random.beta(train_config.beta_a, train_config.beta_b, len(x)), device=accelerator.device
@@ -133,7 +133,7 @@ def main(config: ModelConfig) -> Denoiser:
 
             x_noisy = x_noisy.float()
             noise_level = noise_level.float()
-            label = y.view(-1,1,denoiser_config.y_points)
+            label = y#.view(-1,1,denoiser_config.y_points)
 
             prob = 0.15
             mask = torch.rand(y.size(0), device=accelerator.device) < prob
