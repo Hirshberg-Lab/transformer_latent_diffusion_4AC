@@ -20,8 +20,11 @@ class Laplace:
         self._create_spectrum()
         integrand = self.kernel * self.spectrum /2./np.pi
         G = np.trapz(y=integrand,x=self.omega)
-        self.spectrum /= G[0]
-        return 2*G/G[0]-1
+        A = np.trapz(y=G,x=self.tau)*np.pi
+        # self.spectrum /= G[0]
+        self.spectrum /= A
+        # return 2*G/G[0]-1
+        return G/A
 
 
 class LaplaceTest:
