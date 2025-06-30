@@ -16,12 +16,13 @@ class DenoiserTransBlock(nn.Module):
         dropout: float,
         n_layers: int,
         mlp_multiplier: int = 4,
+        n_channels: int = 1
     ):
         super().__init__()
 
         self.patch_size = patch_size
         self.x_points = x_points
-        self.n_channels = 1 # We have only "one channel"
+        self.n_channels = n_channels # We have only "one channel" when we work with regular spectra
         self.embed_dim = embed_dim
         self.dropout = dropout
         self.n_layers = n_layers
@@ -33,7 +34,7 @@ class DenoiserTransBlock(nn.Module):
         self.patchify_and_embed = nn.Sequential(
             nn.Conv1d(
                 in_channels=self.n_channels, # We have one channel
-                out_channels=patch_dim,      # out channels are equal to the patch_dim
+                out_channels=patch_dim,      # out channels are equal to the patch_dim when n_channels=1
                 kernel_size=self.patch_size,
                 stride=self.patch_size,
             ),
@@ -91,13 +92,14 @@ class Denoiser(nn.Module):
         n_layers: int,
         y_points: int = 99, # changed "text_emb_size" to "y_points" - the number of points in G(\tau)
         mlp_multiplier: int = 4,
+        n_channels: int = 1
     ):
         super().__init__()
 
         self.x_points = x_points
         self.noise_embed_dims = noise_embed_dims
         self.embed_dim = embed_dim
-        self.n_channels = 1 # We have one channel
+        self.n_channels = n_channels # We have only "one channel" when we work with regular spectra
 
         self.fourier_feats = nn.Sequential(
             SinusoidalEmbedding(embedding_dims=noise_embed_dims),
@@ -106,7 +108,7 @@ class Denoiser(nn.Module):
             nn.Linear(self.embed_dim, self.embed_dim),
         )
 
-        self.denoiser_trans_block = DenoiserTransBlock(patch_size, x_points, embed_dim, dropout, n_layers, mlp_multiplier)
+        self.denoiser_trans_block = DenoiserTransBlock(patch_size, x_points, embed_dim, dropout, n_layers, mlp_multiplier,n_channels)
         self.norm = nn.LayerNorm(self.embed_dim)
         self.label_proj = nn.Linear(y_points, self.embed_dim)
 
