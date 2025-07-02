@@ -46,7 +46,7 @@ class DenoiserTransBlock(nn.Module):
 
         self.rearrange2 = Rearrange(
             "b l (c p) -> b c (l p)", # I removed p1 and p2 and combined it to a single p
-            l=int(self.x_points / self.patch_size),
+            # l=int(self.x_points / self.patch_size),
             p=self.patch_size,
         )
 
