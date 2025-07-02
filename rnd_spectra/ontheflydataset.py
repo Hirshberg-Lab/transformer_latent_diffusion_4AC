@@ -63,7 +63,7 @@ class STFT(nn.Module):
         self.win_length = win_length
         self.window = torch.hann_window(win_length)
         self.rearrange = Rearrange(
-            "b c l z -> b c (l z)",
+            "b c l z -> b c (z l)",
         )
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: (batch, x_points)
@@ -91,7 +91,7 @@ class ISTFT(nn.Module):
         self.window = torch.hann_window(win_length)
         self.length = length
         self.rearrange = Rearrange(
-            "b c (l z) -> b c l z",
+            "b c (z l) -> b c l z",
             z=2,
         )
     def forward(self, x: torch.Tensor) -> torch.Tensor:
