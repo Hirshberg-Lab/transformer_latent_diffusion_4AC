@@ -76,7 +76,7 @@ class STFT(nn.Module):
             return_complex=True
         )
         x = torch.view_as_real(x)
-        return self.rearrange(x)
+        return self.rearrange(x).squeeze(0)
 
 class ISTFT(nn.Module):
     def __init__(self, n_fft: int = 90, 
