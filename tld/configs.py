@@ -35,6 +35,7 @@ class DenoiserConfig:
     n_layers: int = 3
     y_points: int = 99 
     mlp_multiplier: int = 4 
+    n_channels: int = 1
 
 @dataclass
 class DenoiserLoad:
