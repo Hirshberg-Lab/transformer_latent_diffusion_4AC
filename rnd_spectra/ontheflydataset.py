@@ -96,7 +96,7 @@ class ISTFT(nn.Module):
         )
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: (batch, x_points)
-        x = self.rearrange(x)
+        x = self.rearrange(x).contiguous() # this way all dimensions of returned tensor will have stride 1. see https://stackoverflow.com/questions/63852258/how-can-i-get-a-view-of-input-as-a-complex-tensor-runtimeerror-tensor-must-hav
         x = torch.view_as_complex(x)
         return torch.istft(
             x,
