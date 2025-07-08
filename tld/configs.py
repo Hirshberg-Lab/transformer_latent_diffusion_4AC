@@ -27,15 +27,17 @@ class SpectralDataConfig:
 
 @dataclass
 class DenoiserConfig:
-    x_points: int = 1024
+    x_points: int = 342
+    freq_x_points: int = 46
     noise_embed_dims: int = 256
     patch_size: int = 2
-    embed_dim: int = 128
+    embed_dim: int = 256
     dropout: float = 0
-    n_layers: int = 3
-    y_points: int = 99 
+    n_layers: int = 12
+    y_points: int = 100 
+    freq_y_points: int = 46
     mlp_multiplier: int = 4 
-    n_channels: int = 1
+    n_channels: int = 2
 
 @dataclass
 class DenoiserLoad:
