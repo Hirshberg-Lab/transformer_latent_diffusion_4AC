@@ -54,7 +54,7 @@ class OnTheFlyDataset(Dataset):
 
 class STFT(nn.Module):
     def __init__(self, n_fft: int = 90,
-                 hop_length: int = 4, 
+                 hop_length: int = 3, 
                  win_length: int = 5
                  ) -> None:
         super().__init__()
@@ -80,7 +80,7 @@ class STFT(nn.Module):
 
 class ISTFT(nn.Module):
     def __init__(self, n_fft: int = 90, 
-                 hop_length: int = 4, 
+                 hop_length: int = 3, 
                  win_length: int = 5,
                  length: int = 1024
                  ) -> None:
