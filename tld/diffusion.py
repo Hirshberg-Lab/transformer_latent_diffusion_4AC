@@ -35,7 +35,8 @@ class DiffusionGenerator:
         class_guidance: float = 3,
         seed: int = 10,
         scale_factor: int = 8,  # latent scaling before decoding - should be ~ std of latent space
-        x_points: int = 1024,  # 
+        x_points: int = 342,  
+        freq_x_points: int = 46,
         sharp_f: float = 0.1,
         bright_f: float = 0.1,
         exponent: float = 1,
@@ -56,7 +57,7 @@ class DiffusionGenerator:
             hs = [lambdas[i] - lambdas[i - 1] for i in range(1, len(lambdas))]
             rs = [hs[i - 1] / hs[i] for i in range(1, len(hs))]
 
-        x_t = self.initialize_spectrum(seeds, num_specs, x_points, seed)
+        x_t = self.initialize_spectrum(seeds, num_specs, x_points, freq_x_points, seed)
 
         labels = torch.cat([labels, torch.zeros_like(labels)])
         self.model.eval()
@@ -102,7 +103,7 @@ class DiffusionGenerator:
         x0_pred = self.apply_classifier_free_guidance(x0_pred, num_specs, class_guidance)
         return x0_pred
 
-    def initialize_spectrum(self, seeds, num_specs, x_points, seed):
+    def initialize_spectrum(self, seeds, num_specs, x_points, freq_x_points, seed):
         """Initialize the seed tensor."""
         if seeds is None:
             generator = torch.Generator(device=self.device)
@@ -110,6 +111,7 @@ class DiffusionGenerator:
             return torch.randn(
                 num_specs,
                 self.model.n_channels,
+                freq_x_points,
                 x_points,
                 # img_size,
                 dtype=self.model_dtype,
