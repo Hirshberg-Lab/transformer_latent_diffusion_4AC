@@ -93,7 +93,7 @@ def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
     if not train_config.from_scratch:
         accelerator.print("Loading Model:")
         wandb.restore(
-            train_config.model_name, run_path=f"sagimeir-tel-aviv-university/DIT_AC/runs/{train_config.run_id}", replace=True
+            train_config.model_name, run_path=f"sagimeir-tel-aviv-university/DIT_AC_2D/runs/{train_config.run_id}", replace=True
         )
         full_state_dict = torch.load(train_config.model_name)
         model.load_state_dict(full_state_dict["model_ema"])
@@ -110,7 +110,7 @@ def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
     model, train_loader, optimizer = accelerator.prepare(model, train_loader, optimizer)
 
     if train_config.use_wandb:
-        accelerator.init_trackers(project_name="DIT_AC", config=asdict(config))
+        accelerator.init_trackers(project_name="DIT_AC_2D", config=asdict(config))
 
     accelerator.print(f"The model has {count_parameters(model)} parameters")
     # accelerator.print(f"Now printing parameters per layer:\n{count_parameters_per_layer(model)}")
@@ -129,7 +129,7 @@ def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
             signal_level = 1 - noise_level
             noise = torch.randn_like(x)
 
-            x_noisy = noise_level.view(-1, 1, 1) * noise + signal_level.view(-1, 1, 1) * x # it was: .view(-1,1,1,1)
+            x_noisy = noise_level.view(-1, 1, 1, 1) * noise + signal_level.view(-1, 1, 1, 1) * x 
 
             x_noisy = x_noisy.float()
             noise_level = noise_level.float()
