@@ -73,7 +73,7 @@ class CrossAttention(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, embed_dim, mlp_multiplier, dropout_level):
+    def __init__(self, embed_dim, mlp_multiplier, dropout_level, freq_x_points):
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(embed_dim, mlp_multiplier * embed_dim),
@@ -87,13 +87,13 @@ class MLP(nn.Module):
 
 
 class MLPSepConv(nn.Module):
-    def __init__(self, embed_dim, mlp_multiplier, dropout_level):
+    def __init__(self, embed_dim, mlp_multiplier, dropout_level, freq_x_points):
         """see: https://github.com/ofsoundof/LocalViT"""
         super().__init__()
         self.mlp = nn.Sequential(
             # this Conv with kernel size 1 is equivalent to the Linear layer in a "regular" transformer MLP
-            nn.Conv1d(embed_dim, mlp_multiplier * embed_dim, kernel_size=1, padding="same"),
-            nn.Conv1d(
+            nn.Conv2d(embed_dim, mlp_multiplier * embed_dim, kernel_size=1, padding="same"),
+            nn.Conv2d(
                 mlp_multiplier * embed_dim,
                 mlp_multiplier * embed_dim,
                 kernel_size=3,
@@ -101,17 +101,16 @@ class MLPSepConv(nn.Module):
                 groups=mlp_multiplier * embed_dim,
             ),  # <- depthwise conv
             nn.GELU(),
-            nn.Conv1d(mlp_multiplier * embed_dim, embed_dim, kernel_size=1, padding="same"),
+            nn.Conv2d(mlp_multiplier * embed_dim, embed_dim, kernel_size=1, padding="same"),
             nn.Dropout(dropout_level),
         )
+        self.freq_x_points = freq_x_points
 
     def forward(self, x):
-        # w = h = int(np.sqrt(x.size(1)))  # only square images for now
-        # x = rearrange(x, "bs (h w) d -> bs d h w", h=h, w=w)
-        x = rearrange(x, "bs l d -> bs d l") # instead of the two lines above
+        h = self.freq_x_points
+        x = rearrange(x, "bs (h w) d -> bs d h w", h=h)
         x = self.mlp(x)
-        # x = rearrange(x, "bs d h w -> bs (h w) d")
-        x = rearrange(x, "bs d l -> bs l d") # instead of the above line
+        x = rearrange(x, "bs d h w -> bs (h w) d")
         return x
 
 
@@ -123,13 +122,14 @@ class DecoderBlock(nn.Module):
         mlp_multiplier: int,
         dropout_level: float,
         mlp_class: type[MLP] | type[MLPSepConv],
+        freq_x_points: int
     ):
         super().__init__()
         self.self_attention = SelfAttention(embed_dim, is_causal, dropout_level, n_heads=embed_dim // 64)
         self.cross_attention = CrossAttention(
             embed_dim, is_causal=False, dropout_level=0, n_heads=embed_dim // 64
         )
-        self.mlp = mlp_class(embed_dim, mlp_multiplier, dropout_level)
+        self.mlp = mlp_class(embed_dim, mlp_multiplier, dropout_level, freq_x_points)
         self.norm1 = nn.LayerNorm(embed_dim)
         self.norm2 = nn.LayerNorm(embed_dim)
         self.norm3 = nn.LayerNorm(embed_dim)
