@@ -27,7 +27,7 @@ class SpectralDataConfig:
 
 @dataclass
 class DenoiserConfig:
-    x_points: int = 342
+    x_points: int = 114
     freq_x_points: int = 46
     noise_embed_dims: int = 256
     patch_size: int = 2
