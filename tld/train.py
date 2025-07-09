@@ -72,7 +72,7 @@ def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
     dataconfig = config.data_config
 
     log_with="wandb" if train_config.use_wandb else None
-    accelerator = Accelerator(mixed_precision="fp16", log_with=log_with)
+    accelerator = Accelerator(mixed_precision="fp16", log_with=log_with, gradient_accumulation_steps=4)
 
     accelerator.print("Creating training loader:")
     hparams = asdict(dataconfig)
@@ -162,15 +162,15 @@ def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
 
             model.train()
 
-            with accelerator.accumulate():
+            with accelerator.accumulate(model):
                 ###train loop:
-                optimizer.zero_grad()
-
+                
                 pred = model(x_noisy, noise_level.view(-1, 1), label)
                 loss = loss_fn(pred, x)
                 # accelerator.log({"train_loss": loss.item()}, step=global_step)
                 accelerator.backward(loss)
                 optimizer.step()
+                optimizer.zero_grad()
                 batch_loss.append(loss.item())
 
                 if accelerator.is_main_process:
