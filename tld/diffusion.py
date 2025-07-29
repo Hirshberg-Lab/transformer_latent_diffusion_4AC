@@ -42,6 +42,9 @@ class DiffusionGenerator:
         seeds: Tensor | None = None, # It looks that this should always be None
         noise_levels=None,
         use_ddpm_plus: bool = True,
+        constraint_guidance: float = 1, # between 0 and 1, 1 means no constraint, 0 means only the constraint
+        prior_knowledge: float | Tensor = 0,
+        directed_positivity: bool = False
     ):
         """Generate images via reverse diffusion.
         if use_ddpm_plus=True uses Algorithm 2 DPM-Solver++(2M) here: https://arxiv.org/pdf/2211.01095.pdf
@@ -62,11 +65,14 @@ class DiffusionGenerator:
         self.model.eval()
 
         x0_pred_prev = None
+        class_guidance = [1 - (1-class_guidance) * n/len(noise_levels) for n in range(len(noise_levels))]
+        constraint_guidance = [1 - (1-constraint_guidance) * n/len(noise_levels) for n in range(len(noise_levels))]
+        # easy to see that if constraint_guidance=1, then this is just 1 for all n, i.e., [1, 1, ..., 1]
 
         for i in tqdm(range(len(noise_levels) - 1)):
             curr_noise, next_noise = noise_levels[i], noise_levels[i + 1]
 
-            x0_pred = self.pred_spec(x_t, labels, curr_noise, class_guidance)
+            x0_pred = self.pred_spec(x_t, labels, curr_noise, class_guidance[i], constraint_guidance[i], prior_knowledge, directed_positivity)
 
             if x0_pred_prev is None:
                 x_t = ((curr_noise - next_noise) * x0_pred + next_noise * x_t) / curr_noise
@@ -82,7 +88,7 @@ class DiffusionGenerator:
 
             x0_pred_prev = x0_pred
 
-        x0_pred = self.pred_spec(x_t, labels, next_noise, class_guidance)
+        x0_pred = self.pred_spec(x_t, labels, next_noise, class_guidance[i+1], constraint_guidance[i+1], prior_knowledge, directed_positivity)
 
         # shifting latents works a bit like an image editor:
         # x0_pred[:, 3, :, :] += sharp_f
@@ -91,7 +97,7 @@ class DiffusionGenerator:
         # x0_pred_img = self.vae.decode((x0_pred * scale_factor).to(self.model_dtype))[0].cpu()
         return x0_pred
 
-    def pred_spec(self, noisy_spec, labels, noise_level, class_guidance):
+    def pred_spec(self, noisy_spec, labels, noise_level, class_guidance, constraint_guidance, prior_knowledge, directed_positivity):
         num_specs = noisy_spec.size(0)
         noises = torch.full((2 * num_specs, 1), noise_level)
         x0_pred = self.model(
@@ -99,7 +105,9 @@ class DiffusionGenerator:
             noises.to(self.device, self.model_dtype),
             labels.to(self.device, self.model_dtype),
         )
-        x0_pred = self.apply_classifier_free_guidance(x0_pred, num_specs, class_guidance)
+        if directed_positivity:
+            prior_knowledge = torch.relu(x0_pred[:num_specs])
+        x0_pred = self.apply_classifier_free_guidance(x0_pred, num_specs, class_guidance, constraint_guidance, prior_knowledge)
         return x0_pred
 
     def initialize_spectrum(self, seeds, num_specs, x_points, seed):
@@ -119,10 +127,13 @@ class DiffusionGenerator:
         else:
             return seeds.to(self.device, self.model_dtype)
 
-    def apply_classifier_free_guidance(self, x0_pred, num_specs, class_guidance):
+    def apply_classifier_free_guidance(self, x0_pred, num_specs, class_guidance, constraint_guidance=1, prior_knowledge=0):
         """Apply classifier-free guidance to the predictions."""
         x0_pred_label, x0_pred_no_label = x0_pred[:num_specs], x0_pred[num_specs:]
-        return class_guidance * x0_pred_label + (1 - class_guidance) * x0_pred_no_label
+        # return class_guidance * x0_pred_label + (1 - class_guidance) * x0_pred_no_label
+        return constraint_guidance * class_guidance * x0_pred_label \
+            + constraint_guidance * (1 - class_guidance) * x0_pred_no_label \
+            + (1-constraint_guidance) * class_guidance * prior_knowledge
 
 
 def download_file(url, filename):
