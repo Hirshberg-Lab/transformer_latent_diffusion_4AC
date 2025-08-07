@@ -65,7 +65,7 @@ def update_ema(ema_model: nn.Module, model: nn.Module, alpha: float = 0.999):
 
 
 
-def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
+def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = False) -> Denoiser:
     """main train loop to be used with accelerate"""
     denoiser_config = config.denoiser_config
     train_config = config.train_config
@@ -78,7 +78,7 @@ def main(config: ModelConfig, use_stft: bool = False) -> Denoiser:
     hparams = asdict(dataconfig)
     random_seed = 40
     bumps = Bumps(hparams=hparams, random_seed=random_seed)
-    dataset = OnTheFlyDataset(bumps=bumps, dataset_size=train_config.dataset_size, use_stft=use_stft)
+    dataset = OnTheFlyDataset(bumps=bumps, dataset_size=train_config.dataset_size, use_stft=use_stft, pointwise_norm=pointwise_norm)
     train_loader = DataLoader(dataset, batch_size=train_config.batch_size, shuffle=False,num_workers=0)
 
     model = Denoiser(**asdict(denoiser_config))

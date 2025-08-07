@@ -17,7 +17,10 @@ class OnTheFlyDataset(Dataset):
                  dtype: str = 'float32',
                  normalize_inputs: Optional[tuple[float,float]] = (0.,1.),
                  normalize_labels: Optional[tuple[float,float]] = (0.,1.),
-                 use_stft: bool = False
+                 use_stft: bool = False,
+                 pointwise_norm: bool = False,
+                 channel_mean: torch.Tensor = torch.Tensor([ 3.3555e-01, -2.2111e+00, -1.2480e-03,  5.0047e-01]),
+                 channel_std: torch.Tensor = torch.Tensor([0.4986, 2.0547, 1.1408, 0.2882])
                  ) -> None:
         
         self.laplace = Laplace(bumps)
@@ -31,6 +34,9 @@ class OnTheFlyDataset(Dataset):
         if use_stft:
             self.encoding_G = STFT(hop_length=1)
             self.encoding_C = STFT()
+        elif pointwise_norm:
+            self.encoding_G = pointwise_G_normalization(mean=channel_mean, std=channel_std)
+            self.encoding_C = nn.Identity()
         else:
             self.encoding_G = nn.Identity()
             self.encoding_C = nn.Identity()
@@ -50,7 +56,29 @@ class OnTheFlyDataset(Dataset):
 
         return self.encoding_C(C), self.encoding_G(G)
 
+class pointwise_G_normalization(nn.Module):
+    def __init__(self, pointwise_mean_G: np.array = np.load('rnd_spectra/pointwise_mean_G.npy'), 
+                 pointwise_mean_abd_G: np.array = np.load('rnd_spectra/pointwise_mean_abd_G.npy'), 
+                 CDF: np.array = np.load('rnd_spectra/cdf_G.npy'), 
+                 possible_G_vals: torch.Tensor = torch.linspace(0,6,int(1e5)),
+                 mean: torch.Tensor = torch.Tensor([ 0, 0, 0,  0]),
+                 std: torch.Tensor = torch.Tensor([1, 1, 1, 1])
+                 ) -> None:
+        super().__init__()
+        self.pointwise_mean_G = torch.from_numpy(pointwise_mean_G)
+        self.pointwise_mean_abd_G = torch.from_numpy(pointwise_mean_abd_G)
+        self.CDF = torch.from_numpy(CDF)
+        self.possible_G_vals = possible_G_vals
+        self.mean = mean[None,:, None]
+        self.std = std[None,:, None]
 
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x_pointwise_norm = (x - self.pointwise_mean_G)/ self.pointwise_mean_abd_G
+        indices = torch.searchsorted(self.possible_G_vals, x.squeeze(0))
+        x_cdf = torch.diag(self.CDF[indices,:]).unsqueeze(0)
+        G = torch.cat([x, x.log(), x_pointwise_norm, x_cdf], dim=0)
+        G = (G - self.mean) / self.std
+        return G.squeeze(0)
 
 class STFT(nn.Module):
     def __init__(self, n_fft: int = 90,
