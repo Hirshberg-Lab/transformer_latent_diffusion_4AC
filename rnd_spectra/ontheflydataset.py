@@ -19,8 +19,8 @@ class OnTheFlyDataset(Dataset):
                  normalize_labels: Optional[tuple[float,float]] = (0.,1.),
                  use_stft: bool = False,
                  pointwise_norm: bool = False,
-                 channel_mean: torch.Tensor = torch.Tensor([ 3.3555e-01, -2.2111e+00, -1.2480e-03,  5.0047e-01]),
-                 channel_std: torch.Tensor = torch.Tensor([0.4986, 2.0547, 1.1408, 0.2882])
+                 channel_mean: torch.Tensor = torch.Tensor([ 0.3319, -1.8394,  0.0023,  0.5002]),
+                 channel_std: torch.Tensor = torch.Tensor([0.4170, 1.5327, 1.1582, 0.2884])
                  ) -> None:
         
         self.laplace = Laplace(bumps)
