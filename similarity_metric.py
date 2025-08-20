@@ -40,13 +40,50 @@ class SimilarityMetric:
         self.smallest_distances = distance
         self.top_similar_spectra = top_similar_spectra
 
-    def plot(self):
+    def plot(self, norm_spect=True):
         n = int(np.sqrt(len(self.smallest_distances)))
         fig,axs = plt.subplots(n,n,figsize=(8.2*n/3,6*n/3),sharex=True,sharey=False)
         palette = ['C' + str(x) for x in range(250000)]
         for j, ax in enumerate(axs.flatten()):
-            ax.plot(self.omega, self.specific_example.numpy().flatten(), color='k')
-            ax.plot(self.omega, self.top_similar_spectra[j].numpy().flatten(), color=palette[j])
+            y = self.specific_example.numpy().flatten()
+            if norm_spect:
+                y /= np.trapz(y, x=self.omega)
+            ax.plot(self.omega, y, color='k')
+            y = self.top_similar_spectra[j].numpy().flatten()
+            if norm_spect:
+                y /= np.trapz(y, x=self.omega)
+            ax.plot(self.omega, y, color=palette[j])
             ax.set_title(f"Distance: {self.smallest_distances[j].item():.4f}")
+        plt.tight_layout()
+        plt.show()
+
+    def plot_closest_G(self):
+        pointwise_mean_G = np.load('rnd_spectra/pointwise_mean_G.npy').flatten()
+        pointwise_mean_abd_G = np.load('rnd_spectra/pointwise_mean_abd_G.npy').flatten()
+        CDF_G = np.load('rnd_spectra/cdf_G.npy')
+        possible_G_vals = np.linspace(0, 6, int(1e5))
+        colors = ['k', 'tab:blue']
+        specs = [self.specific_example.numpy().flatten(), self.top_similar_spectra[0].numpy().flatten()]
+
+        fig,axs = plt.subplots(1,4,figsize=(8.2*4/3,6),sharex=True,sharey=False)
+        kernel = self.dataloader.dataset.laplace.kernel
+        for j in range(2):
+            integrand = kernel * specs[j]
+            G = np.trapz(y=integrand, x=self.omega)
+            A = np.trapz(y=G, x=self.tau) * np.pi
+            G /= A
+            axs[0].plot(self.tau, G, color=colors[j])
+            axs[1].plot(self.tau, np.log(G), color=colors[j])
+
+            G_pointwise_norm = (G - pointwise_mean_G) / pointwise_mean_abd_G
+            axs[2].plot(self.tau, G_pointwise_norm, color=colors[j])
+
+            indices = np.searchsorted(possible_G_vals, G)
+            G = np.diag(CDF_G[indices,:])
+            axs[3].plot(self.tau, G, color=colors[j])
+        axs[0].set_title("G")
+        axs[1].set_title("log(G)")
+        axs[2].set_title("Pointwise norm")
+        axs[3].set_title("CDF of G")
         plt.tight_layout()
         plt.show()
