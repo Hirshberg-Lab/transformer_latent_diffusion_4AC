@@ -38,6 +38,19 @@ class DenoiserConfig:
     n_channels: int = 1
 
 @dataclass
+class DeterministicConfig:
+    x_points: int = 1024
+    noise_embed_dims: int = 256
+    patch_size: int = 2
+    embed_dim: int = 128
+    dropout: float = 0
+    n_layers: int = 3
+    y_points: int = 99
+    mlp_multiplier: int = 4
+    n_channels: int = 1
+    n_channels_y: int = 4
+
+@dataclass
 class DenoiserLoad:
     dtype: torch.dtype = torch.float32
     file_url: str | None = None
@@ -98,6 +111,14 @@ class ModelConfig:
     train_config: TrainConfig = field(default_factory=TrainConfig)
     # vae_cfg: VaeConfig = field(default_factory=VaeConfig)
     # clip_cfg: ClipConfig = field(default_factory=ClipConfig)
+
+
+@dataclass
+class DeterministicModelConfig:
+    """main config for getting data, training and inference for the deterministic model"""
+    data_config: SpectralDataConfig = field(default_factory=SpectralDataConfig)
+    deterministic_config: DeterministicConfig = field(default_factory=DeterministicConfig)
+    train_config: TrainConfig = field(default_factory=TrainConfig)
 
 
 if __name__=='__main__':
