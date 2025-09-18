@@ -33,11 +33,11 @@ class Deterministic_NN(nn.Module):
             nn.Conv1d(
                 in_channels=n_channels_y,
                 out_channels=n_channels,
-                kernel_size=self.patch_size,
-                stride=self.patch_size,
+                kernel_size=patch_size,
+                stride=patch_size,
             ),
-            nn.LayerNorm( y_points//self.patch_size ),
-            nn.Linear( y_points//self.patch_size, x_points ),
+            nn.LayerNorm( y_points//patch_size ),
+            nn.Linear( y_points//patch_size, x_points ),
             nn.LayerNorm(x_points),
         )
 

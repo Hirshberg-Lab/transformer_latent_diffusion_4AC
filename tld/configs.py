@@ -40,7 +40,6 @@ class DenoiserConfig:
 @dataclass
 class DeterministicConfig:
     x_points: int = 1024
-    noise_embed_dims: int = 256
     patch_size: int = 2
     embed_dim: int = 128
     dropout: float = 0
