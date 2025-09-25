@@ -73,6 +73,7 @@ def main(config: DeterministicModelConfig, use_stft: bool = False, pointwise_nor
 
     accelerator.print(f"The model has {count_parameters(model)} parameters")
 
+    model.train()
     epoch_loss=[]
     for i in range(1, train_config.n_epoch + 1):
         batch_loss=[]
