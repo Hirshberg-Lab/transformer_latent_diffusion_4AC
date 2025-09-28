@@ -93,7 +93,7 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
     if not train_config.from_scratch:
         accelerator.print("Loading Model:")
         wandb.restore(
-            train_config.model_name, run_path=f"sagimeir-tel-aviv-university/DIT_AC/runs/{train_config.run_id}", replace=True
+            train_config.model_name, run_path=f"sagimeir-tel-aviv-university/Diffusion_AC/runs/{train_config.run_id}", replace=True
         )
         full_state_dict = torch.load(train_config.model_name)
         model.load_state_dict(full_state_dict["model_ema"])
@@ -104,36 +104,38 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
 
     if accelerator.is_local_main_process:
         ema_model = copy.deepcopy(model).to(accelerator.device)
-        # diffuser = DiffusionGenerator(ema_model, accelerator.device, torch.float32)
 
     accelerator.print("model prep")
     model, train_loader, optimizer = accelerator.prepare(model, train_loader, optimizer)
 
     if train_config.use_wandb:
-        accelerator.init_trackers(project_name="DIT_AC", config=asdict(config))
+        accelerator.init_trackers(project_name="Diffusion_AC", config=asdict(config))
 
     accelerator.print(f"The model has {count_parameters(model)} parameters")
     # accelerator.print(f"Now printing parameters per layer:\n{count_parameters_per_layer(model)}")
+
+    T = 1000
+    alphas = torch.linspace(start=0.9999, end=0.98, steps=T, dtype=torch.float64, device=accelerator.device)
+    alpha_bars = torch.cumprod(alphas, dim=0)
+    sqrt_alpha_bars_t = torch.sqrt(alpha_bars)
+    sqrt_one_minus_alpha_bars_t = torch.sqrt(1.0 - alpha_bars)
 
     ### Train:
     epoch_loss=[]
     for i in range(1, train_config.n_epoch + 1):
         # accelerator.print(f"epoch: {i}")
         batch_loss=[]
-        for x, y in tqdm(train_loader):
-            # x = x.view(-1,1,denoiser_config.x_points)  
+        for x_0, y in tqdm(train_loader):
 
-            noise_level = torch.tensor(
-                np.random.beta(train_config.beta_a, train_config.beta_b, len(x)), device=accelerator.device
-            )
-            signal_level = 1 - noise_level
-            noise = torch.randn_like(x)
+            time = torch.randint(0, T, (x_0.size(0),), device=accelerator.device)
 
-            x_noisy = noise_level.view(-1, 1, 1) * noise + signal_level.view(-1, 1, 1) * x # it was: .view(-1,1,1,1)
+            noise = torch.randn_like(x_0)
 
-            x_noisy = x_noisy.float()
-            noise_level = noise_level.float()
-            label = y#.view(-1,1,denoiser_config.y_points)
+            x_t = sqrt_alpha_bars_t[time].view(-1, 1, 1) * x_0 + sqrt_one_minus_alpha_bars_t[time].view(-1, 1, 1) * noise
+
+            x_t = x_t.float()
+            time = time.float()
+            label = y
 
             prob = 0.15
             mask = torch.rand(y.size(0), device=accelerator.device) < prob
@@ -166,8 +168,8 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
                 ###train loop:
                 optimizer.zero_grad()
 
-                pred = model(x_noisy, noise_level.view(-1, 1), label)
-                loss = loss_fn(pred, x)
+                pred = model(x_t, time.view(-1, 1), label)
+                loss = loss_fn(pred, noise)
                 # accelerator.log({"train_loss": loss.item()}, step=global_step)
                 accelerator.backward(loss)
                 optimizer.step()
