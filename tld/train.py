@@ -72,7 +72,7 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
     dataconfig = config.data_config
 
     log_with="wandb" if train_config.use_wandb else None
-    accelerator = Accelerator(mixed_precision="fp16", log_with=log_with)
+    accelerator = Accelerator(mixed_precision="fp16", log_with=log_with, gradient_accumulation_steps=2)
 
     accelerator.print("Creating training loader:")
     hparams = asdict(dataconfig)
@@ -114,11 +114,11 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
     accelerator.print(f"The model has {count_parameters(model)} parameters")
     # accelerator.print(f"Now printing parameters per layer:\n{count_parameters_per_layer(model)}")
 
-    T = 1000
-    alphas = torch.linspace(start=0.9999, end=0.98, steps=T, dtype=torch.float64, device=accelerator.device)
-    alpha_bars = torch.cumprod(alphas, dim=0)
-    sqrt_alpha_bars_t = torch.sqrt(alpha_bars)
-    sqrt_one_minus_alpha_bars_t = torch.sqrt(1.0 - alpha_bars)
+    # T = 1000
+    # alphas = torch.linspace(start=0.9999, end=0.98, steps=T, dtype=torch.float64, device=accelerator.device)
+    # alpha_bars = torch.cumprod(alphas, dim=0)
+    # sqrt_alpha_bars_t = torch.sqrt(alpha_bars)
+    # sqrt_one_minus_alpha_bars_t = torch.sqrt(1.0 - alpha_bars)
 
     ### Train:
     epoch_loss=[]
@@ -127,14 +127,20 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
         batch_loss=[]
         for x_0, y in tqdm(train_loader):
 
-            time = torch.randint(0, T, (x_0.size(0),), device=accelerator.device)
-
+            # time = torch.randint(0, T, (x_0.size(0),), device=accelerator.device)
+            noise_level = torch.tensor(
+                np.random.beta(train_config.beta_a, train_config.beta_b, len(x_0)), device=accelerator.device
+            )
+            signal_level = 1 - noise_level
             noise = torch.randn_like(x_0)
 
-            x_t = sqrt_alpha_bars_t[time].view(-1, 1, 1) * x_0 + sqrt_one_minus_alpha_bars_t[time].view(-1, 1, 1) * noise
-
+            # x_t = sqrt_alpha_bars_t[time].view(-1, 1, 1) * x_0 + sqrt_one_minus_alpha_bars_t[time].view(-1, 1, 1) * noise
+            x_t = noise_level.view(-1, 1, 1) * noise + signal_level.view(-1, 1, 1) * x_0
+            
+            noise_level = noise_level.float()
             x_t = x_t.float()
-            time = time.float()
+            # time = time.float()/1000
+
             label = y
 
             prob = 0.15
@@ -164,15 +170,14 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
 
             model.train()
 
-            with accelerator.accumulate():
+            with accelerator.accumulate(model):
                 ###train loop:
-                optimizer.zero_grad()
-
-                pred = model(x_t, time.view(-1, 1), label)
+                pred = model(x_t, noise_level.view(-1, 1), label)
                 loss = loss_fn(pred, noise)
                 # accelerator.log({"train_loss": loss.item()}, step=global_step)
                 accelerator.backward(loss)
                 optimizer.step()
+                optimizer.zero_grad()
                 batch_loss.append(loss.item())
 
                 if accelerator.is_main_process:
