@@ -69,15 +69,19 @@ class pointwise_G_normalization(nn.Module):
         self.pointwise_mean_abd_G = torch.from_numpy(pointwise_mean_abd_G)
         self.CDF = torch.from_numpy(CDF)
         self.possible_G_vals = possible_G_vals
-        self.mean = mean[None,:, None]
-        self.std = std[None,:, None]
+        self.mean = mean#[None,:, None]
+        self.std = std#[None,:, None]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.unsqueeze(-2).squeeze(0)
         x_pointwise_norm = (x - self.pointwise_mean_G)/ self.pointwise_mean_abd_G
-        indices = torch.searchsorted(self.possible_G_vals, x.squeeze(0))
-        x_cdf = torch.diag(self.CDF[indices,:]).unsqueeze(0)
-        G = torch.cat([x, x.log(), x_pointwise_norm, x_cdf], dim=0)
-        G = (G - self.mean) / self.std
+        indices = torch.searchsorted(self.possible_G_vals, x)
+        # x_cdf = torch.diag(self.CDF[indices,:]).unsqueeze(0)
+        x_cdf = self.CDF[indices,:].diagonal(dim1=-2,dim2=-1)
+        G = torch.cat([x, x.log(), x_pointwise_norm, x_cdf], dim=-2)
+        mean = self.mean.view(*([1] * (G.ndim - 2)), -1, 1) # reshape for broadcasting
+        std = self.std.view(*([1] * (G.ndim - 2)), -1, 1)
+        G = (G - mean) / std
         return G.squeeze(0)
 
 class STFT(nn.Module):
