@@ -135,7 +135,7 @@ def main(config: ModelConfig, use_stft: bool = False, pointwise_norm: bool = Fal
             noise_level = noise_level.float()
             label = y#.view(-1,1,denoiser_config.y_points)
 
-            prob = 0.15
+            prob = 0.35
             mask = torch.rand(y.size(0), device=accelerator.device) < prob
             label[mask] = 0  # OR replacement_vector
 
