@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from scipy.stats import multivariate_normal
 from pathlib import Path
+import sys
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
 import torch
 import seaborn as sns
 sns.set_theme(style="ticks",palette='tab10',rc={'axes.labelsize':14,'legend.fontsize': 10})
@@ -163,8 +167,8 @@ class SpectralAnalysis:
             plt.figure(figsize=(8, 5),sharex=True)
             ax = plt.gca()
             
-        ax.plot(range(0, len(errors_p)), errors_p, '-o',color='tab:blue', label=r'$p_p$ (Correlated)')
-        ax.plot(range(0, len(errors_u)), errors_u, '--s',color='tab:red', label=r'$p_u$ (Uncorrelated)')
+        ax.plot(range(0, len(errors_p)), errors_p, '-o',color='tab:blue', markerfacecolor='none', label=r'$p_p$ (Correlated)')
+        ax.plot(range(0, len(errors_u)), errors_u, '--s',color='tab:red', markerfacecolor='none', label=r'$p_u$ (Uncorrelated)')
         ax.set_xlabel('$k$')
         # ax.set_ylabel(r'Normalized Error $||C - \hat{C}_k||/||C||$')
         # ax.set_title(f'Idea #3: Parsimony (Ex {self.index})')
@@ -317,13 +321,9 @@ class SpectralAnalysis:
 
 if __name__ == "__main__":
     # 0. Load Data (Logic from comparison.py)
-    load_path = Path("spectra/data_with_diffusion.npz")
+    load_path = BASE_DIR / "spectra/data_with_diffusion.npz"
     if not load_path.exists():
         print(f"Error: File {load_path} not found.")
-        # Try to find it in likely locations or exit
-        # For now, let's assume it might be in the parent dir if running from a subdir
-        if Path("../spectra/data_with_diffusion.npz").exists():
-            load_path = Path("../spectra/data_with_diffusion.npz")
 
     try:
         print(f"Loading data from {load_path}")
@@ -332,7 +332,7 @@ if __name__ == "__main__":
         # G_test = torch.from_numpy(loaded["G_test"]) # Not needed for this analysis yet
         C_test = torch.from_numpy(loaded["C_test"])
     except FileNotFoundError:
-        print("Could not load data. Please ensure 'spectra/data_with_diffusion.npz' exists.")
+        print(f"Could not load data. Please ensure {load_path} exists.")
         exit(1)
 
     # 1. Define frequencies (Logic from comparison.py)
@@ -364,7 +364,7 @@ if __name__ == "__main__":
     axes1[-1].legend()
     # fig1.suptitle("Idea #3: Parsimony Analysis")
     # fig1.tight_layout()
-    # plt.savefig('figs/parsimony_analysis.pdf',bbox_inches='tight',dpi=1000)
+    # plt.savefig(BASE_DIR / 'figs/parsimony_analysis.pdf',bbox_inches='tight',dpi=1000)
     plt.show()
 
     # Spaghetti Plot
@@ -387,7 +387,7 @@ if __name__ == "__main__":
     axes3[0].set_ylabel(r'$\omega$')
     # fig3.suptitle("Correlation Heatmaps")
     # fig3.tight_layout()
-    # plt.savefig('figs/correlation_heatmap.pdf',bbox_inches='tight',dpi=1000)
+    # plt.savefig(BASE_DIR / 'figs/correlation_heatmap.pdf',bbox_inches='tight',dpi=1000)
     plt.show()
 
     # Idea #4: Reconstruction Evolution

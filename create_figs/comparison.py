@@ -1,4 +1,8 @@
 from pathlib import Path
+import sys
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -19,7 +23,7 @@ def compute_pcs_via_pca(samples, n_components=9):
         'explained_variance_ratio': pca.explained_variance_ratio_
         }
 
-load_path = Path("spectra/data_with_diffusion.npz")
+load_path = BASE_DIR / "spectra/data_with_diffusion.npz"
 print(f"Loading data from {load_path}")
 loaded = np.load(load_path)
 
@@ -29,9 +33,14 @@ C_test = torch.from_numpy(loaded["C_test"])
 C_preds_mean = C_preds_array.mean(0)
 C_preds_std = C_preds_array.std(0)
 
-load_path = Path("spectra/data_deterministic.npz")
-loaded = np.load(load_path)
-C_preds_det = loaded["C_preds_det"]
+det_files = list((BASE_DIR / "spectra").glob("data_deterministic_*.npz"))
+C_preds_det_list = []
+for f in det_files:
+    loaded = np.load(f)
+    C_preds_det_list.append(loaded["C_preds_det"])
+C_preds_det_array = np.array(C_preds_det_list)
+C_preds_det_mean = C_preds_det_array.mean(0)
+C_preds_det_std = C_preds_det_array.std(0)
 
 fig,axs = plt.subplots(3,5,figsize=(12,6),sharex=False,sharey=False, layout='compressed',gridspec_kw={'height_ratios': [1, 2, 2]})
 palette = ['C' + str(x) for x in range(250000)]
@@ -56,7 +65,8 @@ for j in range(0,n_ex):
     
     [axs[i,j].plot(omega,C_test[pick_indices[j]].view(1024).cpu().detach().numpy(),'--' ,color='k',label='Ground Truth') for i in range(1,3)]
     axs[1,j].plot(omega,C_preds_mean[pick_indices[j]], color='k',label='Mean Pred.')#palette[0])
-    axs[1,j].plot(omega,C_preds_det[pick_indices[j]].flatten(),'--', color='tab:red',label='Regression')
+    axs[1,j].plot(omega,C_preds_det_mean[pick_indices[j]].flatten(),'--', color='tab:red',label='Regression')
+    axs[1,j].fill_between(omega, (C_preds_det_mean[pick_indices[j]]-C_preds_det_std[pick_indices[j]]).flatten(), (C_preds_det_mean[pick_indices[j]]+C_preds_det_std[pick_indices[j]]).flatten(), color='tab:red', alpha=0.3)
     axs[1,j].fill_between(omega,C_preds_mean[pick_indices[j]]-C_preds_std[pick_indices[j]],C_preds_mean[pick_indices[j]]+C_preds_std[pick_indices[j]],color='tab:grey',alpha=0.6,label='STD Pred.')
 
     axs[1,j].set_xlabel(r'$\omega$',labelpad=-2)
@@ -72,5 +82,5 @@ cbar_ax = fig.add_axes([1.0, 0.08, 0.01, 0.295])
 cbar = fig.colorbar(sm, cax=cbar_ax)
 cbar.set_label(r'$\alpha$', labelpad=-9)
 
-plt.savefig('figs/three_rows_of_ac.pdf',bbox_inches='tight',dpi=1000)
+plt.savefig(BASE_DIR / 'figs/three_rows_of_ac.pdf',bbox_inches='tight',dpi=1000)
 # plt.show()
