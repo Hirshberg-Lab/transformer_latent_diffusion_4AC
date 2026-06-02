@@ -39,7 +39,7 @@ def main(config: DeterministicModelConfig, use_stft: bool = False, pointwise_nor
 
     accelerator.print("Creating training loader:")
     hparams = asdict(dataconfig)
-    random_seed = 43
+    random_seed = 49
     bumps = Bumps(hparams=hparams, random_seed=random_seed)
     dataset = OnTheFlyDataset(bumps=bumps, dataset_size=train_config.dataset_size, use_stft=use_stft, pointwise_norm=pointwise_norm)
     train_loader = DataLoader(dataset, batch_size=train_config.batch_size, shuffle=False,num_workers=0)
