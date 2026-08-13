@@ -1,0 +1,23 @@
+# Core scientific stack
+# NumPy MUST stay below 2.0: the code uses numpy.trapz, removed in NumPy 2.0.
+numpy<2.0
+scipy
+pandas
+scikit-learn
+
+# Deep learning
+torch
+torchvision
+einops
+accelerate
+
+# Plotting
+matplotlib
+seaborn
+
+# Utilities
+tqdm
+requests
+
+# Optional: experiment logging during training (enable with --wandb)
+wandb

@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the associated paper."
+title: "Diffusion models for uncertainty quantification in analytic continuation"
+abstract: >-
+  A conditional diffusion-model framework for the numerical analytic continuation
+  of imaginary-time correlation functions to real-frequency spectra, which learns
+  the full conditional distribution of admissible spectra and quantifies the
+  intrinsic uncertainty of the inversion.
+authors:
+  - family-names: Meir
+    given-names: Sagi
+    affiliation: "Tel Aviv University"
+  - family-names: Freedman
+    given-names: Daniel
+    affiliation: "Tel Aviv University"
+  - family-names: Hirshberg
+    given-names: Barak
+    affiliation: "Tel Aviv University"
+    email: hirshb@tauex.tau.ac.il
+license: MIT
+repository-code: "https://github.com/SagiMeir/transformer_latent_diffusion_4AC"
+preferred-citation:
+  type: article
+  title: "Using Diffusion Models to Estimate Uncertainties in Analytic Continuation"
+  authors:
+    - family-names: Meir
+      given-names: Sagi
+    - family-names: Freedman
+      given-names: Daniel
+    - family-names: Hirshberg
+      given-names: Barak
+  year: 2026
+  # TODO: add journal / volume / pages / doi / arXiv eprint once available.

@@ -3,57 +3,44 @@ requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tld"
+name = "tld-analytic-continuation"
 version = "0.1.0"
-description = "Transformer Latent Diffusion"
-authors = [
-    {name = "Alexandru Papiu", email = "alex.papiu@gmail.com"},
-]
-license = {text = "MIT"}
+description = "Conditional diffusion models for numerical analytic continuation of imaginary-time correlation functions."
 readme = "README.md"
-requires-python = ">=3.6,<4.0"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Sagi Meir" },
+    { name = "Daniel Freedman" },
+    { name = "Barak Hirshberg", email = "hirshb@tauex.tau.ac.il" },
+]
+# Adapted from the Transformer Latent Diffusion codebase by Alexandru Papiu (MIT). See NOTICE.
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
+    "numpy<2.0",
+    "scipy",
+    "pandas",
+    "scikit-learn",
     "torch",
-    "numpy",
-    "einops",
     "torchvision",
-    "tqdm",
-    "diffusers",
+    "einops",
     "accelerate",
-    "transformers",
-    "Pillow",
-    "uvicorn",
-    "gunicorn",
-    "fastapi",
-    "pytest",
-    "ruff",
-    "pytest-asyncio",
-    "httpx",
-    "gradio",
-    "clip@git+https://github.com/openai/CLIP.git",
-    "wandb"
-]
-
-[project.optional-dependencies]
-dev = [
-    "uvicorn",
-    "gunicorn",
-    "fastapi",
-    "pytest",
-    "ruff",
-    "pytest-asyncio",
-    "httpx",
-    "gradio",
+    "matplotlib",
+    "seaborn",
+    "tqdm",
+    "requests",
+    "wandb",
 ]
 
 [project.urls]
-Homepage = "https://github.com/apapiu/transformer_latent_diffusion"
-Repository = "https://github.com/apapiu/transformer_latent_diffusion"
+Homepage = "https://github.com/SagiMeir/transformer_latent_diffusion_4AC"
+Repository = "https://github.com/SagiMeir/transformer_latent_diffusion_4AC"
 
 [tool.setuptools]
-packages = ["tld"]
+packages = ["tld", "rnd_spectra"]

@@ -1,0 +1,20 @@
+This repository is a derivative work.
+
+It adapts the Transformer Latent Diffusion codebase
+    https://github.com/apapiu/transformer_latent_diffusion
+    Copyright (c) 2023 Alexandru Papiu
+    MIT License
+from text-to-image latent diffusion to a 1D conditional diffusion model for the
+numerical analytic continuation of imaginary-time correlation functions, as
+described in:
+
+    Sagi Meir, Daniel Freedman, and Barak Hirshberg,
+    "Using Diffusion Models to Estimate Uncertainties in Analytic Continuation."
+
+New and modified code for the analytic-continuation adaptation is
+    Copyright (c) 2026 Sagi Meir, Daniel Freedman, and Barak Hirshberg
+and is released under the same MIT License (see the LICENSE file).
+
+The transformer building blocks of the original project were in turn inspired by
+PixArt-alpha, k-diffusion, nanoGPT, and LocalViT; see the upstream repository for
+those acknowledgments.

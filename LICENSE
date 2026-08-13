@@ -1,6 +1,8 @@
 MIT License
 
-Copyright (c) 2023 Alexandru Papiu
+Copyright (c) 2023 Alexandru Papiu (original Transformer Latent Diffusion codebase)
+Copyright (c) 2026 Sagi Meir, Daniel Freedman, and Barak Hirshberg
+    (1D analytic-continuation adaptation)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,4 +1,45 @@
-.venv
-build
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+*_cache/
+.ipynb_checkpoints/
 
-*_cache
+# --- Experiment logging ---
+wandb/
+
+# --- Trained model checkpoints (regenerate with run_training.py) ---
+# These are large (~136 MB each) and are intentionally excluded from the repo.
+*.pt
+*.pth
+12layers
+NormG_12layers
+diffusion_pointwise_norm_G
+pointwise_norm_G
+pointwise_norm_G_Csigma*
+label_mask_pointwise_norm_G_Csigma*
+sharper_peaks_12layers*
+deterministic_model_*
+STFT
+STFT2
+STFT_2D
+STFT_norm_2D
+
+# --- Generated figure outputs (regenerate with create_figs/*.py) ---
+figs/*.pdf
+figs/*.png
+figs/*.jpg
+!figs/.gitkeep
+
+# --- Scratch ---
+test_plot.png
+# Development notebooks are kept out of the published repo (force-add if ever needed).
+*.ipynb
+
+# --- Release tooling (not part of the published repo) ---
+clean_repo_bundle.tar.gz
+create_release_branch.sh
