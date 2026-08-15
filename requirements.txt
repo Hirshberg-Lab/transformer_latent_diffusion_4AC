@@ -2,7 +2,10 @@
 # NumPy MUST stay below 2.0: the code uses numpy.trapz, removed in NumPy 2.0.
 numpy<2.0
 scipy
-pandas
+# pandas MUST stay below 3.0: pandas 3.0 enables Copy-on-Write, which makes
+# DataFrame.values read-only and breaks the in-place scaling in
+# create_figs/parahydrogen.py.
+pandas<3.0
 scikit-learn
 
 # Deep learning

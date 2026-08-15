@@ -68,8 +68,10 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-> ⚠️ **NumPy < 2.0 is required.** The code uses `numpy.trapz`, which was removed in NumPy 2.0.
-> This pin is already in `requirements.txt`.
+> ⚠️ **NumPy < 2.0 and pandas < 3.0 are required.** The code uses `numpy.trapz` (removed in
+> NumPy 2.0), and pandas 3.0 enables Copy-on-Write, which makes `DataFrame.values` read-only
+> and breaks the in-place scaling in `create_figs/parahydrogen.py`. Both pins are already in
+> `requirements.txt`.
 
 All scripts are meant to be run **from the repository root** (paths such as `data/…`,
 `spectra/…`, `rnd_spectra/…` are resolved relative to it).
