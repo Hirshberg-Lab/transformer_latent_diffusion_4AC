@@ -19,6 +19,12 @@ authors:
     email: hirshb@tauex.tau.ac.il
 license: MIT
 repository-code: "https://github.com/SagiMeir/transformer_latent_diffusion_4AC"
+keywords:
+  - analytic continuation
+  - diffusion models
+  - inverse problems
+  - uncertainty quantification
+  - path-integral molecular dynamics
 preferred-citation:
   type: article
   title: "Using Diffusion Models to Estimate Uncertainties in Analytic Continuation"
@@ -30,4 +36,8 @@ preferred-citation:
     - family-names: Hirshberg
       given-names: Barak
   year: 2026
-  # TODO: add journal / volume / pages / doi / arXiv eprint once available.
+  url: "https://arxiv.org/abs/2608.13123"
+  identifiers:
+    - type: other
+      value: "arXiv:2608.13123"
+      description: "arXiv eprint identifier (primary class: physics.comp-ph)"

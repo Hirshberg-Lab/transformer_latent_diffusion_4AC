@@ -1,5 +1,8 @@
 # Diffusion Models for Uncertainty Quantification in Analytic Continuation
 
+[![arXiv](https://img.shields.io/badge/arXiv-2608.13123-b31b1b.svg)](https://arxiv.org/abs/2608.13123)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A conditional **diffusion-model** framework for the numerical **analytic continuation** of
 imaginary-time correlation functions (iTCFs) `G(τ)` to real-frequency power spectra `C(ω)`.
 Instead of predicting a single spectrum, the model learns the full conditional distribution
@@ -10,11 +13,8 @@ intrinsic *hardness* of each inversion with a new metric, the **Uncertainty Pseu
 This repository contains the code, the synthetic-data generator, and precomputed model
 predictions needed to reproduce the figures of the paper:
 
-> **Using Diffusion Models to Estimate Uncertainties in Analytic Continuation**
-> Sagi Meir, Daniel Freedman, and Barak Hirshberg.
-
-> ℹ️ Update the citation block (`CITATION.cff`) and the link above with the arXiv / journal
-> reference once it is available.
+> **[Using Diffusion Models to Estimate Uncertainties in Analytic Continuation](https://arxiv.org/abs/2608.13123)**
+> Sagi Meir, Daniel Freedman, and Barak Hirshberg — arXiv:2608.13123 (2026).
 
 The model architecture is a 1D **Diffusion Transformer (DiT)** adapted from
 [`apapiu/transformer_latent_diffusion`](https://github.com/apapiu/transformer_latent_diffusion)
@@ -151,7 +151,22 @@ and the constants at the top of `run_training.py` / `run_inference.py`).
 
 ## Citation
 
-See [`CITATION.cff`](CITATION.cff). Please cite the paper if you use this code.
+If you use this code, please cite the paper:
+
+```bibtex
+@misc{meir2026usingdiffusionmodelsestimate,
+      title={Using Diffusion Models to Estimate Uncertainties in Analytic Continuation},
+      author={Sagi Meir and Daniel Freedman and Barak Hirshberg},
+      year={2026},
+      eprint={2608.13123},
+      archivePrefix={arXiv},
+      primaryClass={physics.comp-ph},
+      url={https://arxiv.org/abs/2608.13123},
+}
+```
+
+Machine-readable metadata is in [`CITATION.cff`](CITATION.cff) (GitHub renders a
+"Cite this repository" button from it).
 
 ## License and attribution
 
